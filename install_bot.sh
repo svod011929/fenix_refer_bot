@@ -6,7 +6,7 @@ sudo apt update
 sudo apt install -y python3 python3-pip git
 
 # Клонирование репозитория
-git clone https://github.com/ваш-username/ваш-репозиторий.git /opt/referral_bot
+git clone https://github.com/svod011929/fenix_refer_bot.git /opt/referral_bot
 cd /opt/referral_bot
 
 # Установка Python-зависимостей
