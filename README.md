@@ -17,3 +17,11 @@
    ```bash
    python referral_bot.py
    ```
+### Автоматическая установка
+
+1. На сервере выполните команду для автоматической установки:
+   ```bash
+   bash <(curl -s https://raw.githubusercontent.com/svod011929/fenix_refer_bot/main/install_bot.sh)
+   ```
+
+2. После установки бот будет запущен и настроен на авторестарт через `systemd`.
