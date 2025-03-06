@@ -6,7 +6,7 @@ After=network.target
 User=root
 WorkingDirectory=/root/referral_bot
 ExecStartPre=/bin/chmod 755 /root/referral_bot
-ExecStart=/usr/bin/python3 /root/referral_bot/referral_bot.py
+ExecStart=/root/referral_bot/venv/bin/python3 /root/referral_bot/referral_bot.py
 Restart=always
 RestartSec=5
 
