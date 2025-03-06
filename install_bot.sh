@@ -9,7 +9,7 @@ git clone https://github.com/svod011929/fenix_refer_bot.git /root/referral_bot
 cd /root/referral_bot
 
 # Создание виртуального окружения
-python3 -m venv venv
+python3 -m venv /root/referral_bot/venv
 source /root/referral_bot/venv/bin/activate
 
 # Установка Python-зависимостей внутри виртуального окружения
