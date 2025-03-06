@@ -1,6 +1,6 @@
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.middlewares import LoggingMiddleware
+from aiogram.middlewares import BaseMiddleware
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils import executor
 from config import BOT_TOKEN, ADMINS
