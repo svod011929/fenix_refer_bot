@@ -10,5 +10,8 @@ ExecStart=/root/referral_bot/venv/bin/python3 /root/referral_bot/referral_bot.py
 Restart=always
 RestartSec=5
 
+# Указываем переменные окружения для виртуального окружения
+Environment="PATH=/root/referral_bot/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 [Install]
 WantedBy=multi-user.target
