@@ -1,17 +1,19 @@
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.middlewares import BaseMiddleware
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from aiogram.utils import executor
+from aiogram.filters import Command
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, Message
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.middleware import BaseMiddleware
 from config import BOT_TOKEN, ADMINS
+from aiogram import Router
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
 
 # Инициализация бота и диспетчера
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
-dp.middleware.setup(LoggingMiddleware())
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+dp = Dispatcher()
 
 # Уровни и бонусы
 LEVELS = {
@@ -25,6 +27,14 @@ LEVELS = {
 users = {}
 transactions = []
 
+# Middleware для логирования
+class LoggingMiddleware(BaseMiddleware):
+    async def __call__(self, handler, event, data):
+        logging.info(f"Обработка события: {event}")
+        return await handler(event, data)
+
+dp.message.middleware(LoggingMiddleware())
+
 # Проверка прав администратора
 def is_admin(user_id: int) -> bool:
     return user_id in ADMINS
@@ -32,19 +42,19 @@ def is_admin(user_id: int) -> bool:
 # Главное меню
 def get_main_menu(user_id: int) -> ReplyKeyboardMarkup:
     keyboard = [
-        [KeyboardButton("Баланс"), KeyboardButton("Мои рефералы")],
-        [KeyboardButton("Реферальная ссылка"), KeyboardButton("Мой уровень")]
+        [KeyboardButton(text="Баланс"), KeyboardButton(text="Мои рефералы")],
+        [KeyboardButton(text="Реферальная ссылка"), KeyboardButton(text="Мой уровень")]
     ]
     if is_admin(user_id):
-        keyboard.append([KeyboardButton("Админ-панель")])
-    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        keyboard.append([KeyboardButton(text="Админ-панель")])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 # Команда /start
-@dp.message_handler(commands=['start'])
-async def start(message: types.Message):
+@dp.message(Command("start"))
+async def start(message: Message):
     user_id = message.from_user.id
     username = message.from_user.username
-    args = message.get_args()
+    args = message.text.split()[1] if len(message.text.split()) > 1 else None
 
     if user_id not in users:
         users[user_id] = {"username": username, "balance": 0, "referrer_id": None, "level": 1}
@@ -75,15 +85,15 @@ async def start(message: types.Message):
     await message.answer("Выберите действие:", reply_markup=get_main_menu(user_id))
 
 # Команда "Баланс"
-@dp.message_handler(lambda message: message.text == "Баланс")
-async def balance(message: types.Message):
+@dp.message(lambda message: message.text == "Баланс")
+async def balance(message: Message):
     user_id = message.from_user.id
     balance = users[user_id]["balance"]
     await message.answer(f"Ваш баланс: {balance} рублей.")
 
 # Команда "Мои рефералы"
-@dp.message_handler(lambda message: message.text == "Мои рефералы")
-async def my_refs(message: types.Message):
+@dp.message(lambda message: message.text == "Мои рефералы")
+async def my_refs(message: Message):
     user_id = message.from_user.id
     refs = [u["username"] for u in users.values() if u["referrer_id"] == user_id]
     if refs:
@@ -92,44 +102,46 @@ async def my_refs(message: types.Message):
         await message.answer("У вас пока нет рефералов.")
 
 # Команда "Реферальная ссылка"
-@dp.message_handler(lambda message: message.text == "Реферальная ссылка")
-async def referral_link(message: types.Message):
+@dp.message(lambda message: message.text == "Реферальная ссылка")
+async def referral_link(message: Message):
     user_id = message.from_user.id
     await message.answer(f"Ваша реферальная ссылка: https://t.me/{bot.username}?start={user_id}")
 
 # Команда "Мой уровень"
-@dp.message_handler(lambda message: message.text == "Мой уровень")
-async def my_level(message: types.Message):
+@dp.message(lambda message: message.text == "Мой уровень")
+async def my_level(message: Message):
     user_id = message.from_user.id
     level = users[user_id]["level"]
     await message.answer(f"Ваш уровень: {level}. Бонус за реферала: {LEVELS[level]['bonus']} рублей.")
+
 # Админ-панель
-@dp.message_handler(lambda message: message.text == "Админ-панель" and is_admin(message.from_user.id))
-async def admin_panel(message: types.Message):
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(KeyboardButton("Добавить баланс"), KeyboardButton("Списать баланс"))
-    keyboard.add(KeyboardButton("Рассылка"), KeyboardButton("Главное меню"))
+@dp.message(lambda message: message.text == "Админ-панель" and is_admin(message.from_user.id))
+async def admin_panel(message: Message):
+    keyboard = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="Добавить баланс"), KeyboardButton(text="Списать баланс")],
+        [KeyboardButton(text="Рассылка"), KeyboardButton(text="Главное меню")]
+    ], resize_keyboard=True)
     await message.answer("Админ-панель:", reply_markup=keyboard)
 
 # Админ-панель: добавление баланса
-@dp.message_handler(lambda message: message.text == "Добавить баланс" and is_admin(message.from_user.id))
-async def admin_add_balance(message: types.Message):
+@dp.message(lambda message: message.text == "Добавить баланс" and is_admin(message.from_user.id))
+async def admin_add_balance(message: Message):
     await message.answer("Введите ID пользователя и сумму для начисления (например, 123456 100):")
 
-@dp.message_handler(lambda message: is_admin(message.from_user.id) and message.text.split()[0].isdigit())
-async def add_balance(message: types.Message):
+@dp.message(lambda message: is_admin(message.from_user.id) and message.text.split()[0].isdigit())
+async def add_balance(message: Message):
     user_id, amount = map(int, message.text.split())
     users[user_id]["balance"] += amount
     transactions.append((user_id, amount, "Административное начисление"))
     await message.answer(f"Баланс пользователя {user_id} увеличен на {amount} рублей.")
 
 # Админ-панель: рассылка сообщений
-@dp.message_handler(lambda message: message.text == "Рассылка" and is_admin(message.from_user.id))
-async def admin_broadcast(message: types.Message):
+@dp.message(lambda message: message.text == "Рассылка" and is_admin(message.from_user.id))
+async def admin_broadcast(message: Message):
     await message.answer("Введите сообщение для рассылки:")
 
-@dp.message_handler(lambda message: is_admin(message.from_user.id) and not message.text.startswith("/"))
-async def broadcast_message(message: types.Message):
+@dp.message(lambda message: is_admin(message.from_user.id) and not message.text.startswith("/"))
+async def broadcast_message(message: Message):
     for user_id in users:
         try:
             await bot.send_message(user_id, message.text)
@@ -138,10 +150,14 @@ async def broadcast_message(message: types.Message):
     await message.answer("Рассылка завершена.")
 
 # Возврат в главное меню
-@dp.message_handler(lambda message: message.text == "Главное меню")
-async def main_menu(message: types.Message):
+@dp.message(lambda message: message.text == "Главное меню")
+async def main_menu(message: Message):
     await message.answer("Выберите действие:", reply_markup=get_main_menu(message.from_user.id))
 
 # Запуск бота
-if name == 'main':
-    executor.start_polling(dp, skip_updates=True)
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(main())
