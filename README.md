@@ -25,3 +25,29 @@
    ```
 
 2. После установки бот будет запущен и настроен на авторестарт через `systemd`.
+
+### Пример использования:
+1. Запуск сервиса:
+   ```bash
+   sudo systemctl start referral_bot.service
+   ```
+
+2. Проверка статуса:
+   ```bash
+   sudo systemctl status referral_bot.service
+   ```
+
+3. Перезапуск сервиса:
+   ```bash
+   sudo systemctl restart referral_bot.service
+   ```
+
+4. Остановка сервиса:
+   ```bash
+   sudo systemctl stop referral_bot.service
+   ```
+
+5. Просмотр логов:
+   ```bash
+   sudo journalctl -u referral_bot.service
+   ```
