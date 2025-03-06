@@ -14,7 +14,6 @@ sudo apt install python3-venv
 python3 -m venv /root/referral_bot/venv
 source /root/referral_bot/venv/bin/activate
 pip3 install -r requirements.txt
-deactivate
 
 # Настройка systemd
 sudo cp systemd/referral_bot.service /etc/systemd/system/
