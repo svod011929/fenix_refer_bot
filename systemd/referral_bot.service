@@ -3,9 +3,9 @@ Description=Telegram Referral Bot
 After=network.target
 
 [Service]
-User=your_username
-WorkingDirectory=/path/to/your/bot
-ExecStart=/usr/bin/python3 /path/to/your/bot/referral_bot.py
+User=root
+WorkingDirectory=/root/referral_bot
+ExecStart=/usr/bin/python3 /root/referral_bot/referral_bot.py
 Restart=always
 RestartSec=5
 
