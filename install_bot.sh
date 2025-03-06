@@ -10,7 +10,7 @@ cd /root/referral_bot
 
 # Создание виртуального окружения
 python3 -m venv venv
-source venv/bin/activate
+source /root/referral_bot/venv/bin/activate
 
 # Установка Python-зависимостей внутри виртуального окружения
 pip install -r requirements.txt
