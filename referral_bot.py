@@ -9,11 +9,15 @@ from config import BOT_TOKEN, ADMINS
 from aiogram import Router
 
 # Логирование
-logging.basicConfig(level=logging.INFO)
+class LoggingMiddleware(BaseMiddleware):
+    async def __call__(self, handler, event: Message, data):
+        logging.info(f"Обработка сообщения: {event.text}")
+        return await handler(event, data)
 
 # Инициализация бота и диспетчера
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
+dp.message.middleware(LoggingMiddleware())
 
 # Уровни и бонусы
 LEVELS = {
